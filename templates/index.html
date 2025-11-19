@@ -185,5 +185,23 @@
         setInterval(()=>{ createBall(); }, 720);
       })();
     </script>
+    <!-- DEBUG: log clicks and topmost element to help diagnose unclickable CTA -->
+    <script>
+      (function(){
+        window.addEventListener('click', function(ev){
+          try{
+            const pt = { x: ev.clientX, y: ev.clientY };
+            const el = document.elementFromPoint(pt.x, pt.y);
+            console.log('[DEBUG CLICK] event.target=', ev.target, '\n elementFromPoint=', el, '\n client=', pt);
+            if(el){
+              // briefly flash the element to visualise stacking
+              const orig = el.style.boxShadow;
+              el.style.boxShadow = '0 0 0 3px rgba(255,0,0,0.9)';
+              setTimeout(()=> el.style.boxShadow = orig, 400);
+            }
+          }catch(e){ console.log('[DEBUG CLICK] error', e); }
+        }, true);
+      })();
+    </script>
   </body>
 </html>
