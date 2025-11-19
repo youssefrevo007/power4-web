@@ -42,7 +42,6 @@
               <option value="principal">Thème principal</option>
               <option value="sport">Thème sport</option>
               <option value="pokemon">Thème Pokémon</option>
-              <option value="ynov">Thème Ynov</option>
             </select>
           </div>
 
@@ -83,9 +82,11 @@
           applyMode(next);
         });
         // Theme persistence: apply saved theme and wire selector
-        const savedTheme = localStorage.getItem('pf4-theme') || 'principal';
+        let savedTheme = localStorage.getItem('pf4-theme') || 'principal';
+        // If a previous value used the removed 'ynov' theme, fall back to principal
+        if (savedTheme === 'ynov') savedTheme = 'principal';
         function applyThemeToPage(theme){
-          body.classList.remove('theme-principal','theme-sport','theme-dragon','theme-pokemon','theme-ynov');
+          body.classList.remove('theme-principal','theme-sport','theme-dragon','theme-pokemon');
           body.classList.add('theme-' + theme);
           // swap background video if available; fallback to themed overlay/background
           const vid = document.getElementById('fondquibrille');
