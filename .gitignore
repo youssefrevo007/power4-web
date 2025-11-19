@@ -1,0 +1,28 @@
+# Binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Go build
+bin/
+*.exe
+*.test
+
+# Vendor
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# Node modules (if any)
+node_modules/
+
+# Logs
+*.log
