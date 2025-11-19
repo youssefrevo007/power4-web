@@ -109,6 +109,9 @@ body.night-mode #fondquibrille { filter: brightness(var(--bg-brightness)); }
   z-index: 0;
 }
 
+/* Make overlay non-interactive so it only dims visuals and doesn't block clicks */
+.overlay { pointer-events: none; }
+
 /* === VIDÉO DE FOND === */
 #fondquibrille {
   position: fixed;
@@ -327,7 +330,7 @@ h1, .button-class, .start-button {
 /* Hero section */
 .hero {
   position: relative;
-  z-index: 2;
+  z-index: 5; /* ensure hero content sits above the overlay and other decorative layers */
   /* full viewport height so children can be centered exactly in the middle */
   min-height: 100vh;
   display: flex;
