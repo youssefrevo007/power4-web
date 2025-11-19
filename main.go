@@ -13,6 +13,7 @@ import (
 var currentGame *game.Game
 
 func main() {
+	http.HandleFunc("/auth", handleAuth)       // Page d'authentification (login / register)
 	http.HandleFunc("/", handleIndex)          // Page d'accueil
 	http.HandleFunc("/start", handleStart)     // Démarrer une nouvelle partie (via bouton)
 	http.HandleFunc("/choose", handleChoose)   // Choix des ballons/tokens
@@ -40,6 +41,16 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	currentGame = nil
 	log.Printf("GET %s from %s — serving index.html", r.URL.Path, r.RemoteAddr)
 	renderTemplate(w, "templates/index.html", nil)
+}
+
+// handleAuth sert la page d'authentification (login / register)
+func handleAuth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Méthode non autorisée", http.StatusMethodNotAllowed)
+		return
+	}
+	log.Printf("GET %s from %s — serving auth.html", r.URL.Path, r.RemoteAddr)
+	renderTemplate(w, "templates/auth.html", nil)
 }
 
 func handleGame(w http.ResponseWriter, r *http.Request) {
