@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Connexion / Inscription - Puissance 4</title>
+    <link rel="stylesheet" href="/assets/static/style/Style.css">
+    <style>
+      /* small additions scoped to this page */
+      .auth-wrap{max-width:520px;margin:48px auto;background:rgba(0,0,0,0.35);padding:24px;border-radius:12px}
+      .tabs{display:flex;gap:8px;margin-bottom:12px}
+      .tab{flex:1;padding:8px 12px;text-align:center;cursor:pointer;border-radius:8px;background:rgba(255,255,255,0.06)}
+      .tab.active{background:rgba(255,255,255,0.12);font-weight:600}
+      .input-row{margin:8px 0}
+      .small-note{font-size:0.9rem;color:rgba(255,255,255,0.8);margin-top:6px}
+    </style>
+  </head>
+  <body>
+    <video autoplay muted loop id="fondquibrille">
+      <source src="/assets/video/Arriéreplan.mp4.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+    <header class="site-header">
+      <nav class="nav">
+        <div class="brand"><a href="/" class="brand-link">Puissance 4</a></div>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <div class="hero-content">
+        <div class="auth-wrap">
+          <div class="tabs">
+            <div id="tab-login" class="tab active">Se connecter</div>
+            <div id="tab-register" class="tab">Créer un compte</div>
+          </div>
+
+          <div id="login-view">
+            <div class="input-row"><input id="login-username" class="input-name" placeholder="Pseudo ou email"/></div>
+            <div class="input-row"><input id="login-password" type="password" class="input-name" placeholder="Mot de passe"/></div>
+            <div style="margin-top:12px;">
+              <button id="btn-login" class="start-button">Se connecter</button>
+              <a href="/" class="button-class" style="margin-left:12px">Annuler</a>
+            </div>
+            <div class="small-note">Remarque : cette démo n'utilise pas de backend. Une connexion simulée sera effectuée en localStorage.</div>
+          </div>
+
+          <div id="register-view" style="display:none;">
+            <div class="input-row"><input id="reg-username" class="input-name" placeholder="Pseudo"/></div>
+            <div class="input-row"><input id="reg-email" class="input-name" placeholder="Email (optionnel)"/></div>
+            <div class="input-row"><input id="reg-password" type="password" class="input-name" placeholder="Mot de passe"/></div>
+            <div style="margin-top:12px;">
+              <button id="btn-register" class="start-button">Créer un compte</button>
+              <a href="/" class="button-class" style="margin-left:12px">Annuler</a>
+            </div>
+            <div class="small-note">Les comptes sont simplement stockés localement pour la démo (localStorage).</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function(){
+        // tabs
+        const tabLogin = document.getElementById('tab-login');
+        const tabReg = document.getElementById('tab-register');
+        const loginView = document.getElementById('login-view');
+        const regView = document.getElementById('register-view');
+        function showLogin(){ tabLogin.classList.add('active'); tabReg.classList.remove('active'); loginView.style.display='block'; regView.style.display='none'; }
+        function showReg(){ tabLogin.classList.remove('active'); tabReg.classList.add('active'); loginView.style.display='none'; regView.style.display='block'; }
+        tabLogin.addEventListener('click', showLogin); tabReg.addEventListener('click', showReg);
+
+        // simple localStorage-backed accounts (demo only)
+        function loadAccounts(){ try{ return JSON.parse(localStorage.getItem('pf4-accounts')||'{}'); }catch(e){return{}} }
+        function saveAccounts(ac){ localStorage.setItem('pf4-accounts', JSON.stringify(ac)); }
+
+        document.getElementById('btn-register').addEventListener('click', function(){
+          const u = document.getElementById('reg-username').value.trim();
+          const e = document.getElementById('reg-email').value.trim();
+          const p = document.getElementById('reg-password').value;
+          if(!u || !p){ alert('Veuillez fournir au moins un pseudo et un mot de passe.'); return; }
+          const ac = loadAccounts();
+          if(ac[u]){ alert('Ce pseudo existe déjà. Choisis-en un autre.'); return; }
+          ac[u] = { email: e, password: p };
+          saveAccounts(ac);
+          // auto-login after register
+          localStorage.setItem('pf4-user', JSON.stringify({ username: u }));
+          localStorage.setItem('pf4-authenticated','1');
+          // redirect to start page
+          location.href = '/start';
+        });
+
+        document.getElementById('btn-login').addEventListener('click', function(){
+          const u = document.getElementById('login-username').value.trim();
+          const p = document.getElementById('login-password').value;
+          if(!u || !p){ alert('Veuillez fournir pseudo/email et mot de passe.'); return; }
+          const ac = loadAccounts();
+          // attempt login by username
+          if(ac[u] && ac[u].password === p){
+            localStorage.setItem('pf4-user', JSON.stringify({ username: u }));
+            localStorage.setItem('pf4-authenticated','1');
+            location.href = '/start';
+            return;
+          }
+          // try to match by email
+          for(const k in ac){ if(ac[k].email && ac[k].email === u && ac[k].password === p){
+            localStorage.setItem('pf4-user', JSON.stringify({ username: k }));
+            localStorage.setItem('pf4-authenticated','1');
+            location.href = '/start';
+            return;
+          }}
+          alert('Identifiants incorrects (démo locale).');
+        });
+
+        // if already authenticated, forward to start
+        try{
+          if(localStorage.getItem('pf4-authenticated')){
+            // small delay to let user see the page if they navigated here manually
+            setTimeout(()=> location.href='/start', 250);
+          }
+        }catch(e){}
+
+        // apply saved theme for consistency
+        const savedTheme = localStorage.getItem('pf4-theme');
+        if(savedTheme) document.body.classList.add('theme-' + savedTheme);
+      })();
+    </script>
+  </body>
+</html>
