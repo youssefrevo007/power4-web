@@ -1,0 +1,864 @@
+assets/static/style/Style.css
+/* === STYLE GLOBAL === */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Poppins", Arial, sans-serif;
+  text-align: center;
+  background-color: #111;
+  color: white;
+  overflow-x: hidden;
+}
+
+/* Day / Night modes */
+.day-mode {
+  --bg-brightness: 1.15;
+  --text-color: #111;
+  --overlay: rgba(255,255,255,0.06);
+}
+.night-mode {
+  --bg-brightness: 0.55;
+  --text-color: #fff;
+  --overlay: rgba(0,0,0,0.55);
+}
+
+/* Theme skins: principal, sport, dragon, ynov */
+.theme-principal {
+  --accent: #ffcc00;
+  --accent-2: #ffaa00;
+  --card-bg: rgba(0,0,0,0.35);
+  --overlay-gradient: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.6) 100%);
+}
+.theme-sport {
+  --accent: #1ec27a;
+  --accent-2: #14a85b;
+  --card-bg: rgba(10,20,10,0.45);
+  --overlay-gradient: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 100%);
+}
+.theme-dragon {
+  --accent: #ff6b00;
+  --accent-2: #ffcc33;
+  --card-bg: rgba(20,8,0,0.45);
+  --overlay-gradient: linear-gradient(180deg, rgba(8,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%);
+}
+/* Pokémon theme (renamed from dragon) — uses your uploaded Pokémon images */
+.theme-pokemon {
+  --accent: #ff6b00;
+  --accent-2: #ffcc33;
+  --card-bg: rgba(20,8,0,0.45);
+  --overlay-gradient: linear-gradient(180deg, rgba(8,0,0,0.55) 0%, rgba(0,0,0,0.7) 100%);
+}
+.theme-ynov {
+  --accent: #5b6cff;
+  --accent-2: #9aa7ff;
+  --card-bg: rgba(5,8,20,0.45);
+  --overlay-gradient: linear-gradient(180deg, rgba(0,0,8,0.55) 0%, rgba(0,0,8,0.65) 100%);
+}
+
+/* Apply theme overlay default */
+body.theme-principal .overlay,
+body.theme-sport .overlay,
+body.theme-dragon .overlay,
+body.theme-pokemon .overlay,
+body.theme-ynov .overlay { background: var(--overlay-gradient); }
+
+/* Falling-ball variations per theme */
+body.theme-dragon .falling-ball.red { background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%, #d35400 100%); }
+body.theme-dragon .falling-ball.orange { background: radial-gradient(circle at 35% 30%, #fffbe6 0%, #ffd76b 20%, #ffb300 60%, #ff8c00 100%); }
+body.theme-pokemon .falling-ball.red { background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%, #d35400 100%); }
+body.theme-pokemon .falling-ball.orange { background: radial-gradient(circle at 35% 30%, #fffbe6 0%, #ffd76b 20%, #ffb300 60%, #ff8c00 100%); }
+
+body.theme-sport .falling-ball.red { background: radial-gradient(circle at 35% 30%, #fff3f0 0%, #ff4d4d 20%, #e60000 60%); }
+body.theme-sport .falling-ball.orange { background: radial-gradient(circle at 35% 30%, #e6fff2 0%, #5de6a8 20%, #1ec27a 60%); }
+
+body.theme-ynov .falling-ball.red { background: radial-gradient(circle at 35% 30%, #fff3f8 0%, #b58cff 20%, #5b6cff 60%); }
+body.theme-ynov .falling-ball.orange { background: radial-gradient(circle at 35% 30%, #eef2ff 0%, #9aa7ff 20%, #5b6cff 60%); }
+
+body.theme-principal .falling-ball.red { background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%); }
+body.theme-principal .falling-ball.orange { background: radial-gradient(circle at 35% 30%, #fffbe6 0%, #ffd76b 20%, #ffb300 60%); }
+
+/* Apply variables */
+body.day-mode {
+  background-color: #f7f7f7;
+  color: var(--text-color);
+}
+body.day-mode #fondquibrille { filter: brightness(var(--bg-brightness)); }
+body.night-mode #fondquibrille { filter: brightness(var(--bg-brightness)); }
+.day-mode .overlay { background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%); }
+.night-mode .overlay { background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.6) 100%); }
+
+/* Mode toggle button */
+.mode-toggle {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.day-mode .mode-toggle { background: rgba(0,0,0,0.06); color: #111; border: 1px solid rgba(0,0,0,0.08); }
+
+/* Overlay pour améliorer lisibilité sur la vidéo */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.6) 100%);
+  z-index: 0;
+}
+
+/* === VIDÉO DE FOND === */
+#fondquibrille {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
+  filter: brightness(0.5);
+}
+
+/* === TITRES === */
+h1 {
+  font-size: 3.5em;
+  margin-top: 60px;
+  color: #ffcc00;
+  text-shadow: 0 0 15px rgba(255, 204, 0, 0.8);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffaa00;
+  }
+  to {
+    text-shadow: 0 0 25px #ffaa00, 0 0 50px #ffcc00;
+  }
+}
+
+/* === PLATEAU DE JEU === */
+#game-board {
+  display: grid;
+  grid-template-columns: repeat(7, 70px);
+  grid-template-rows: repeat(6, 70px);
+  gap: 6px;
+  justify-content: center;
+  margin-top: 40px;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+/* === CELLULES === */
+.cell {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+/* winning cell blur */
+.cell.winner-blur {
+  filter: blur(6px) saturate(0.7);
+  transform: scale(1.03);
+  opacity: 0.8;
+  transition: filter 300ms ease, transform 200ms ease, opacity 300ms ease;
+}
+
+/* stronger, extraordinary winning effect */
+.cell.winner-epic {
+  position: relative;
+  overflow: visible;
+  filter: blur(10px) saturate(0.6) contrast(1.05);
+  transform: scale(1.04) rotate(-0.6deg);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.45) inset;
+  transition: filter 420ms cubic-bezier(.2,.9,.3,1), transform 420ms ease;
+}
+.cell.winner-epic::before{
+  content: '';
+  position: absolute; left: -6px; top: -6px; right: -6px; bottom: -6px; border-radius:50%;
+  box-shadow: 0 0 40px rgba(255,200,80,0.14) inset;
+  pointer-events:none;
+}
+
+/* animated orb inside winning cell */
+.winning-orb{ position:absolute; width:42px; height:42px; left:50%; top:50%; transform:translate(-50%,-50%) scale(0.2); border-radius:50%; box-shadow:0 8px 30px rgba(0,0,0,0.45); opacity:0; animation: orbPop 520ms cubic-bezier(.2,.9,.3,1) forwards; }
+@keyframes orbPop{ 0%{ transform:translate(-50%,-50%) scale(0.08); opacity:0 } 60%{ transform:translate(-50%,-50%) scale(1.12); opacity:1 } 100%{ transform:translate(-50%,-50%) scale(1); opacity:0.95 } }
+
+/* theme-specific orb colors */
+.theme-sport .winning-orb{ background: radial-gradient(circle at 30% 30%, #fff3d6 0%, #ffb84d 25%, #ff8c00 70%); box-shadow:0 8px 30px rgba(255,140,0,0.6);} 
+.theme-dragon .winning-orb{ background: radial-gradient(circle at 30% 30%, #ffd76b 0%, #ff9b00 40%, #c44 100%); box-shadow:0 8px 30px rgba(200,60,30,0.6);} 
+.theme-pokemon .winning-orb{ background: radial-gradient(circle at 30% 30%, #ffd76b 0%, #ff9b00 40%, #c44 100%); box-shadow:0 8px 30px rgba(200,60,30,0.6);} 
+.theme-principal .winning-orb{ background: radial-gradient(circle at 30% 30%, #dfeedd 0%, #8fbf8a 40%, #3f7b3f 100%); box-shadow:0 8px 30px rgba(40,80,40,0.55);} 
+
+.cell {
+  position: relative; /* pour les pseudo-éléments (étoile) */
+  overflow: hidden;
+}
+
+.cell:hover {
+  transform: scale(1.1);
+  background-color: rgba(255, 255, 255, 1);
+}
+
+/* === COULEURS DES PIONS === */
+/* Joueur 1 : style "Dragon Ball" — orange brillant avec étoile rouge au centre */
+.cell.red {
+  background: radial-gradient(circle at 30% 25%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%, #d35400 100%);
+  box-shadow: 0 6px 18px rgba(255,140,0,0.9), inset 0 -6px 12px rgba(0,0,0,0.18);
+}
+.cell.red::after {
+  content: '★';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(200,30,30,0.95);
+  font-size: 26px;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.6);
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
+}
+
+/* Joueur 2 : aspect sombre avec bordure orange (contraste typé DBZ) */
+.cell.yellow {
+  background: radial-gradient(circle at 30% 25%, #383f46 0%, #0f1724 60%, #000000 100%);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.8), inset 0 -6px 10px rgba(255,140,0,0.06);
+  border: 3px solid rgba(255,140,0,0.9);
+}
+
+/* === TEXTE DU GAGNANT === */
+#winner {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 30px;
+  text-shadow: 0 0 15px #000;
+}
+
+/* === BOUTONS === */
+.button-class,
+.start-button {
+  display: inline-block;
+  margin-top: 30px;
+  padding: 12px 35px;
+  background-color: #ffcc00;
+  color: #000;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 1.2em;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 204, 0, 0.5);
+}
+
+.start-button:hover {
+  transform: scale(1.1);
+}
+.theme-principal .button-class, .theme-principal .start-button { background-color: var(--accent); color: #000; box-shadow: 0 4px 15px rgba(255,204,0,0.5); }
+.theme-principal .button-class:hover, .theme-principal .start-button:hover { background-color: var(--accent-2); box-shadow: 0 0 25px rgba(255,170,0,0.8); }
+.theme-dragon .button-class, .theme-dragon .start-button { background-color: var(--accent); color:#2b1b00; }
+.theme-dragon .button-class:hover, .theme-dragon .start-button:hover { background-color: var(--accent-2); }
+.theme-sport .button-class, .theme-sport .start-button { background-color: var(--accent); color:#032; }
+.theme-ynov .button-class, .theme-ynov .start-button { background-color: var(--accent); color:#fff; }
+
+/* === MENU D’ACCUEIL === */
+.menu-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  color: white;
+}
+
+/* Header / Nav */
+.site-header {
+  /* keep header visible but remove it from document flow so the hero can center to viewport */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 3;
+  background: transparent;
+}
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 36px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.brand {
+  font-weight: 700;
+  color: #ffcc00;
+  font-size: 1.2rem;
+  text-shadow: 0 0 8px rgba(255,204,0,0.6);
+}
+.brand-link { color: inherit; text-decoration: none; }
+.nav-actions { z-index: 3; }
+
+/* === ANIMATIONS GÉNÉRALES === */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h1, .button-class, .start-button {
+  animation: fadeIn 1.2s ease forwards;
+}
+
+/* Hero section */
+.hero {
+  position: relative;
+  z-index: 2;
+  /* full viewport height so children can be centered exactly in the middle */
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px; /* small side padding only */
+}
+.hero-content {
+  max-width: 900px;
+  color: #fff;
+  text-align: center;
+}
+
+/* Home card styles */
+.home-card {
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border-radius: 18px;
+  padding: 28px 28px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  max-width: 720px;
+  margin: 0 auto; /* remove extra top margin so centering is exact */
+  text-align: center;
+}
+.home-card .logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 30% 25%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%);
+  color: #2b1b00;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 24px;
+  box-shadow: 0 6px 18px rgba(255,140,0,0.8);
+  margin-bottom: 12px;
+}
+.mini-board { margin-top:18px; display:flex; justify-content:center; }
+.mini-grid { display: grid; grid-template-columns: repeat(7, 12px); grid-template-rows: repeat(6, 12px); gap:4px; }
+.mini-grid .mini-cell { width:12px; height:12px; border-radius:50%; background: rgba(255,255,255,0.08); box-shadow: inset 0 -2px 4px rgba(0,0,0,0.6); }
+.mini-grid .mini-cell.red { background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%); }
+.mini-grid .mini-cell.yellow { background: radial-gradient(circle at 35% 30%, #383f46 0%, #0f1724 60%); border: 1px solid rgba(255,140,0,0.25);} 
+
+/* animate a dropping piece in the mini-grid */
+.mini-grid { position: relative; }
+.mini-drop { position: absolute; width:12px; height:12px; border-radius:50%; pointer-events:none; transform: translateY(-40px); opacity:0; }
+.mini-drop.red { background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%); box-shadow: 0 4px 10px rgba(255,140,0,0.6); }
+.mini-drop.yellow { background: radial-gradient(circle at 35% 30%, #383f46 0%, #0f1724 60%); box-shadow: 0 4px 10px rgba(0,0,0,0.6); border:1px solid rgba(255,140,0,0.15); }
+.card-title { font-size: 2.2rem; margin: 6px 0 6px; color: #ffdd66; text-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+.subtitle { color: rgba(255,255,255,0.9); margin-bottom: 14px; }
+.features { list-style: none; padding: 0; margin: 10px 0 18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap }
+.feature-item { background: rgba(0,0,0,0.35); padding:8px 12px; border-radius: 999px; font-weight:600; color:#fff; font-size:0.95rem }
+.start-button.large { padding: 14px 42px; font-size:1.15rem }
+
+/* subtle entrance animation for the card */
+.home-card { transform: translateY(6px); opacity: 0; animation: cardIn 700ms cubic-bezier(.2,.9,.3,1) forwards 200ms; }
+@keyframes cardIn { to { transform: translateY(0); opacity: 1 } }
+
+/* Make CTA glow a bit */
+.start-button.large { box-shadow: 0 8px 30px rgba(255,204,0,0.35); transition: transform 0.16s, box-shadow 0.16s; }
+.start-button.large:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(255,204,0,0.5); }
+.tagline {
+  font-size: 1.15rem;
+  margin-top: 10px;
+  color: #f4f4f4;
+  opacity: 0.95;
+}
+.hero-cta { margin-top: 18px; }
+.credits {
+  position: fixed;
+  bottom: 12px;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.7);
+  z-index: 3;
+}
+
+/* Game page container */
+.game-container {
+  position: relative;
+  z-index: 2;
+  padding: 28px 20px 80px;
+  min-height: 100vh;
+}
+
+/* 3D layered title */
+.title-3d {
+  position: relative;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.title-3d .layer {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-align: center;
+  pointer-events: none;
+}
+.title-3d .layer-3 {
+  /* lighter, clearer shadow/back layer */
+  color: rgba(0,0,0,0.25);
+  font-size: 84px;
+  transform: translateX(-50%) translateY(14px) scale(1.02);
+  filter: blur(3px);
+  opacity: 0.6;
+}
+.title-3d .layer-2 {
+  color: rgba(34,22,10,0.6);
+  font-size: 96px;
+  transform: translateX(-50%) translateY(6px) scale(1.01);
+  opacity: 0.6;
+}
+.title-3d .layer-1 {
+  color: #ffcc00;
+  font-size: 110px;
+  transform: translateX(-50%) translateY(0) scale(1);
+  text-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 30px rgba(255,204,0,0.8);
+}
+
+.sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* Players info styling */
+.players-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  z-index: 2;
+}
+.players-info .player {
+  background: rgba(0,0,0,0.45);
+  padding: 10px 18px;
+  border-radius: 12px;
+  min-width: 160px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+.players-info .player .label {
+  display: block;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 6px;
+}
+.players-info .player .name {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+.players-info .player-2 .name {
+  color: #ffdd66; /* highlighted adversary */
+  text-shadow: 0 3px 18px rgba(255,170,0,0.55);
+}
+.players-info .vs { color: rgba(255,255,255,0.7); font-weight:700; font-size:1.5rem; }
+
+/* Token styles for chosen balls */
+.token-star {
+  position: relative;
+  background: radial-gradient(circle at 30% 30%, #fff3d6 0%, #ffb84d 30%, #ff8c00 70%);
+  box-shadow: 0 6px 18px rgba(255,140,0,0.9), inset 0 -6px 12px rgba(0,0,0,0.18);
+}
+.token-star::after{
+  content: '★';
+  position: absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  color: rgba(200,30,30,0.95); font-size:18px; text-shadow:0 1px 1px rgba(0,0,0,0.6);
+}
+.token-galaxy {
+  background: radial-gradient(circle at 30% 25%, #bfe9ff 0%, #7aa8ff 25%, #3b5cff 60%, #0b1833 100%);
+  box-shadow: 0 6px 18px rgba(10,20,60,0.7), inset 0 -6px 12px rgba(255,255,255,0.02);
+}
+.token-neon {
+  background: radial-gradient(circle at 30% 25%, #ffe6ff 0%, #ff85d0 20%, #ff3fa6 55%, #b3006a 100%);
+  box-shadow: 0 8px 22px rgba(255,80,150,0.45), 0 0 18px rgba(255,80,150,0.22);
+}
+
+/* === CHOIX DES BALLES (page choose.html) === */
+.choose-grid { display:flex; gap:28px; justify-content:center; align-items:flex-start; flex-wrap:wrap; margin-top:12px; }
+.choose-player { flex:1 1 320px; }
+.choose-player h3 { margin-bottom:10px; font-size:1.1rem; color:var(--text-color, #fff); }
+.balls { display:flex; gap:18px; justify-content:center; align-items:center; }
+.ball-option { display:flex; flex-direction:column; align-items:center; cursor:pointer; }
+.ball-option input { display:none; }
+.ball { width:120px; height:120px; border-radius:50%; display:inline-block; background: rgba(255,255,255,0.06); box-shadow: 0 12px 36px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; font-size:44px; color:#fff; }
+.ball-name { margin-top:8px; font-weight:700; color:rgba(255,255,255,0.9); }
+.ball-option input:checked + .ball { outline: 6px solid rgba(255,255,255,0.12); transform: translateY(-6px); }
+
+/* Default visuals (principal theme) - use styled shapes / emoji */
+/* Principal theme: use professional orb images */
+body.theme-principal .ball.star { background-image: url('/assets/static/img/principal-solar-globe.svg'); background-size: cover; background-position: center; color: transparent; }
+body.theme-principal .ball.galaxy { background-image: url('/assets/static/img/principal-aurora-orb.svg'); background-size: cover; background-position: center; color: transparent; }
+body.theme-principal .ball.neon { background-image: url('/assets/static/img/principal-neon-pulse.svg'); background-size: cover; background-position: center; color: transparent; }
+body.theme-principal .ball.ajout1 { background-image: url('/assets/static/img/principal-amber-sphere.svg'); background-size: cover; background-position: center; color: transparent; }
+body.theme-principal .ball.ajout2 { background-image: url('/assets/static/img/principal-stone-orb.svg'); background-size: cover; background-position: center; color: transparent; }
+
+/* --- Specialized principal balls variant using Pokémon images for a fun variant --- */
+/* These override the principal thumbnails when the user picks the principal theme */
+body.theme-principal .ball.star.special-poke { background-image: url('/assets/static/img/POKE1.png'); background-size: cover; background-position: center; color: transparent; box-shadow: 0 10px 30px rgba(255,200,50,0.12), inset 0 -6px 12px rgba(0,0,0,0.12); border: 3px solid rgba(255,255,255,0.06); }
+body.theme-principal .ball.galaxy.special-poke { background-image: url('/assets/static/img/POKE2.png'); background-size: cover; background-position: center; color: transparent; box-shadow: 0 10px 30px rgba(200,80,40,0.10); border: 3px solid rgba(255,255,255,0.06); }
+body.theme-principal .ball.neon.special-poke { background-image: url('/assets/static/img/POKE3.png'); background-size: cover; background-position: center; color: transparent; box-shadow: 0 10px 30px rgba(120,200,255,0.08); border: 3px solid rgba(255,255,255,0.06); }
+body.theme-principal .ball.ajout1.special-poke { background-image: url('/assets/static/img/POKE4.png'); background-size: cover; background-position: center; color: transparent; box-shadow: 0 10px 30px rgba(80,160,120,0.08); border: 3px solid rgba(255,255,255,0.06); }
+body.theme-principal .ball.ajout2.special-poke { background-image: url('/assets/static/img/POKE5.png'); background-size: cover; background-position: center; color: transparent; box-shadow: 0 10px 30px rgba(200,120,200,0.08); border: 3px solid rgba(255,255,255,0.06); }
+
+/* Sport theme: use the real photos you added (PNG) for a pro visual */
+body.theme-sport .ball.star { background-image: url('/assets/static/img/BASKETT.png'); background-size: cover; background-position: center; color: transparent; }
+body.theme-sport .ball.galaxy { background-image: url('/assets/static/img/RUGBY.png'); background-size: cover; background-position: center; color: transparent; }
+body.theme-sport .ball.neon { background-image: url('/assets/static/img/FOOTBALL.png'); background-size: cover; background-position: center; color: transparent; }
+body.theme-sport .ball.ajout1 { background-image: url('/assets/static/img/TENNIS.png'); background-size: cover; background-position: center; color: transparent; }
+body.theme-sport .ball.ajout2 { background-image: url('/assets/static/img/VOLLEY.png'); background-size: cover; background-position: center; color: transparent; }
+
+/* You can add more sport options by supplying sport-tennis.png etc and updating HTML if needed */
+
+/* Dragon theme: Dragon Ball style orbs */
+body.theme-dragon .ball.star { background-image: url('/assets/static/img/dragon-4star.svg'); background-size: cover; background-position:center; }
+body.theme-dragon .ball.galaxy { background-image: url('/assets/static/img/dragon-orange.svg'); background-size: cover; background-position:center; }
+body.theme-dragon .ball.neon { background-image: url('/assets/static/img/dragon-blue.svg'); background-size: cover; background-position:center; }
+body.theme-dragon .ball.ajout1 { background-image: url('/assets/static/img/dragon-redorb.svg'); background-size: cover; background-position:center; }
+body.theme-dragon .ball.ajout2 { background-image: url('/assets/static/img/dragon-goldorb.svg'); background-size: cover; background-position:center; }
+
+/* Pokémon theme thumbnails (use uploaded POKE images) */
+body.theme-pokemon .ball.star { background-image: url('/assets/static/img/POKE1.png'); background-size: cover; background-position:center; color: transparent; }
+body.theme-pokemon .ball.galaxy { background-image: url('/assets/static/img/POKE2.png'); background-size: cover; background-position:center; color: transparent; }
+body.theme-pokemon .ball.neon { background-image: url('/assets/static/img/POKE3.png'); background-size: cover; background-position:center; color: transparent; }
+body.theme-pokemon .ball.ajout1 { background-image: url('/assets/static/img/POKE4.png'); background-size: cover; background-position:center; color: transparent; }
+body.theme-pokemon .ball.ajout2 { background-image: url('/assets/static/img/POKE5.png'); background-size: cover; background-position:center; color: transparent; }
+
+/* Ynov theme: neon / tech orbs */
+body.theme-ynov .ball.star { background-image: url('/assets/static/img/ynov-neon1.svg'); background-size: cover; background-position:center; }
+body.theme-ynov .ball.galaxy { background-image: url('/assets/static/img/ynov-neon2.svg'); background-size: cover; background-position:center; }
+body.theme-ynov .ball.neon { background-image: url('/assets/static/img/ynov-neon3.svg'); background-size: cover; background-position:center; }
+body.theme-ynov .ball.ajout1 { background-image: url('/assets/static/img/ynov-neon4.svg'); background-size: cover; background-position:center; }
+body.theme-ynov .ball.ajout2 { background-image: url('/assets/static/img/ynov-neon5.svg'); background-size: cover; background-position:center; }
+
+/* Ensure the chosen token skin applied to cells overrides the generic .cell.red/.cell.yellow styles */
+.cell.token-star { background: radial-gradient(circle at 30% 25%, #fff3d6 0%, #ffb84d 20%, #ff8c00 55%, #d35400 100%) !important; box-shadow: 0 6px 18px rgba(255,140,0,0.9) !important; }
+.cell.token-star::after { content: '★'; position: absolute; left:50%; top:50%; transform:translate(-50%,-50%); color: rgba(200,30,30,0.95); font-size:26px; pointer-events:none; }
+.cell.token-galaxy { background: radial-gradient(circle at 30% 25%, #bfe9ff 0%, #7aa8ff 25%, #3b5cff 60%, #0b1833 100%) !important; box-shadow: 0 6px 18px rgba(10,20,60,0.7) !important; }
+.cell.token-neon { background: radial-gradient(circle at 30% 25%, #ffe6ff 0%, #ff85d0 20%, #ff3fa6 55%, #b3006a 100%) !important; box-shadow: 0 8px 22px rgba(255,80,150,0.45) !important; }
+.cell.token-ajout1 { background: radial-gradient(circle at 30% 30%, #ffd7c2 0%, #ff9f5a 30%, #d96b00 70%) !important; }
+.cell.token-ajout2 { background: radial-gradient(circle at 30% 30%, #fffbe6 0%, #ffd76b 30%, #ffb300 70%) !important; }
+
+/* For the principal theme, map cell tokens to the new professional SVGs */
+body.theme-principal .cell.token-star { background-image: url('/assets/static/img/principal-solar-globe.svg') !important; background-size: cover; background-position: center; }
+body.theme-principal .cell.token-galaxy { background-image: url('/assets/static/img/principal-aurora-orb.svg') !important; background-size: cover; background-position: center; }
+body.theme-principal .cell.token-neon { background-image: url('/assets/static/img/principal-neon-pulse.svg') !important; background-size: cover; background-position: center; }
+body.theme-principal .cell.token-ajout1 { background-image: url('/assets/static/img/principal-amber-sphere.svg') !important; background-size: cover; background-position: center; }
+body.theme-principal .cell.token-ajout2 { background-image: url('/assets/static/img/principal-stone-orb.svg') !important; background-size: cover; background-position: center; }
+
+/* Theme-specific cell skins (map token classes to theme assets) */
+/* Sport cells: use full background shorthand so photos render well and remove decorative pseudo-elements */
+body.theme-sport .cell.token-star { background: url('/assets/static/img/BASKETT.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-sport .cell.token-galaxy { background: url('/assets/static/img/RUGBY.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-sport .cell.token-neon { background: url('/assets/static/img/FOOTBALL.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-sport .cell.token-ajout1 { background: url('/assets/static/img/TENNIS.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-sport .cell.token-ajout2 { background: url('/assets/static/img/VOLLEY.png') center/cover no-repeat !important; background-color: transparent !important; }
+
+/* Hide decorative ::after (star) when using sport images */
+body.theme-sport .cell.token-star::after,
+body.theme-sport .cell.token-galaxy::after,
+body.theme-sport .cell.token-neon::after,
+body.theme-sport .cell.token-ajout1::after,
+body.theme-sport .cell.token-ajout2::after { display: none !important; content: none !important; }
+
+body.theme-dragon .cell.token-star { background-image: url('/assets/static/img/dragon-4star.svg') !important; background-size: cover; }
+body.theme-dragon .cell.token-galaxy { background-image: url('/assets/static/img/dragon-orange.svg') !important; background-size: cover; }
+body.theme-dragon .cell.token-neon { background-image: url('/assets/static/img/dragon-blue.svg') !important; background-size: cover; }
+body.theme-dragon .cell.token-ajout1 { background-image: url('/assets/static/img/dragon-redorb.svg') !important; background-size: cover; }
+body.theme-dragon .cell.token-ajout2 { background-image: url('/assets/static/img/dragon-goldorb.svg') !important; background-size: cover; }
+
+/* Pokémon theme: place each uploaded Pokemon image inside the cell circles */
+body.theme-pokemon .cell.token-star { background: url('/assets/static/img/POKE1.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-pokemon .cell.token-galaxy { background: url('/assets/static/img/POKE2.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-pokemon .cell.token-neon { background: url('/assets/static/img/POKE3.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-pokemon .cell.token-ajout1 { background: url('/assets/static/img/POKE4.png') center/cover no-repeat !important; background-color: transparent !important; }
+body.theme-pokemon .cell.token-ajout2 { background: url('/assets/static/img/POKE5.png') center/cover no-repeat !important; background-color: transparent !important; }
+
+/* Hide any decorative ::after from token styles so the Pokemon photos are unobstructed */
+body.theme-pokemon .cell.token-star::after,
+body.theme-pokemon .cell.token-galaxy::after,
+body.theme-pokemon .cell.token-neon::after,
+body.theme-pokemon .cell.token-ajout1::after,
+body.theme-pokemon .cell.token-ajout2::after { display: none !important; content: none !important; }
+
+body.theme-ynov .cell.token-star { background-image: url('/assets/static/img/ynov-neon1.svg') !important; background-size: cover; }
+body.theme-ynov .cell.token-galaxy { background-image: url('/assets/static/img/ynov-neon2.svg') !important; background-size: cover; }
+body.theme-ynov .cell.token-neon { background-image: url('/assets/static/img/ynov-neon3.svg') !important; background-size: cover; }
+body.theme-ynov .cell.token-ajout1 { background-image: url('/assets/static/img/ynov-neon4.svg') !important; background-size: cover; }
+body.theme-ynov .cell.token-ajout2 { background-image: url('/assets/static/img/ynov-neon5.svg') !important; background-size: cover; }
+
+/* Fallback if an image is missing - show a border and text */
+.ball[style*="url"] { background-color: transparent; color: transparent; }
+.ball[style*="url"]::after { content: ''; display:block; width:100%; height:100%; border-radius:50%; }
+
+/* Footer */
+.site-footer { position: relative; z-index: 2; padding: 18px 0; color: rgba(255,255,255,0.7); }
+
+/* Responsive tweaks */
+@media (max-width: 720px) {
+  h1 { font-size: 2.2em; }
+  .cell { width: 54px; height: 54px; }
+  #game-board { grid-template-columns: repeat(7, 54px); grid-template-rows: repeat(6, 54px); gap: 6px; }
+  .nav { padding: 14px; }
+}
+
+/* === FALLING BALLS (global decorative) === */
+.falling-ball {
+  position: fixed;
+  top: -10vh;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
+  transform-origin: center;
+  animation-name: fall-and-spin;
+  animation-timing-function: linear;
+  will-change: transform, opacity;
+}
+.falling-ball.red {
+  background: radial-gradient(circle at 35% 30%, #fff3d6 0%, #ff8c00 30%, #c44100 100%);
+}
+.falling-ball.orange {
+  background: radial-gradient(circle at 35% 30%, #fffbe6 0%, #ffd76b 20%, #ffb300 60%, #ff8c00 100%);
+}
+/* homepage-specific decorative colors: black and blue to match background */
+.falling-ball.black {
+  background: radial-gradient(circle at 30% 30%, #0b0b0b 0%, #1a2b3a 40%, #021028 100%);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.8);
+}
+.falling-ball.blue {
+  background: radial-gradient(circle at 30% 30%, #a8d4ff 0%, #4a8ee6 30%, #0b3f87 100%);
+  box-shadow: 0 8px 22px rgba(10,40,100,0.6);
+}
+
+/* Winner banner */
+#winner-banner {
+  position: fixed;
+  left: 50%;
+  top: 36%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  padding: 0; /* no boxed padding — we show only the text */
+  border-radius: 0;
+  font-size: 44px;
+  font-weight: 900;
+  opacity: 0;
+  transition: opacity 240ms ease, transform 240ms ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+#winner-banner { color: #fff; text-shadow: 0 6px 20px rgba(0,0,0,0.6); background: transparent; }
+
+/* Theme-specific text fills using repeating SVG textures */
+.theme-sport #winner-banner {
+  /* More readable solid text for sport theme */
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  -webkit-text-fill-color: initial;
+  text-shadow: 0 6px 20px rgba(0,0,0,0.7);
+}
+.theme-dragon #winner-banner {
+  /* More readable solid text for dragon theme */
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  -webkit-text-fill-color: initial;
+  text-shadow: 0 6px 24px rgba(0,0,0,0.7);
+}
+/* Pokémon theme banner mirrors dragon styling but keeps the name 'Pokémon' visuals */
+.theme-pokemon #winner-banner {
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  -webkit-text-fill-color: initial;
+  text-shadow: 0 6px 24px rgba(0,0,0,0.7);
+}
+.theme-principal #winner-banner {
+  font-family: monospace;
+  color: #d4f1b0;
+  background: linear-gradient(180deg,#bde27b,#7aa94a);
+  -webkit-background-clip: text; background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.5);
+}
+
+/* visible state toggled by JS */
+#winner-banner.visible { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#winner-banner { transform: translate(-50%, -50%) scale(0.96); }
+
+/* Winner plain text (unframed) */
+#winner-text {
+  display: inline-block;
+  font-size: clamp(28px, 6vw, 64px);
+  font-weight: 900;
+  color: #fff;
+  -webkit-text-stroke: 1px rgba(0,0,0,0.35);
+  text-shadow: 0 10px 28px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+/* Actions container placed lower on the page, away from the banner */
+.banner-actions-container {
+  position: fixed;
+  left: 50%;
+  top: calc(36% + 140px);
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+}
+
+.banner-actions-container .banner-btn { pointer-events: auto; }
+
+/* Overlay that dims the page when the winner is shown */
+.winner-overlay {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px) saturate(0.6);
+  z-index: 9990;
+  transition: opacity 280ms ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A 'game-over' body class used while winner state is active */
+/* When game is over, only blur the individual cells on the board so the rest of the page remains readable */
+body.game-over #game-board .cell { filter: blur(6px) saturate(0.7); transition: filter 360ms ease, opacity 360ms ease; pointer-events: none; }
+
+/* Keep the winning cells sharp and prominent above other elements */
+.cell.winner-epic { z-index: 9992; position: relative; filter: none !important; transform: scale(1.04) rotate(-0.6deg); }
+
+/* Also make sure any orb inside a winner cell is visible */
+.cell.winner-epic .winning-orb { opacity: 1; }
+
+/* winner cells should rise above the overlay so they remain visible and epic */
+.cell.winner-epic { z-index: 9992; position: relative; }
+
+/* Principal-themed per-letter style: animated background gradient mimicking the site background */
+.word-principal {
+  display:inline-block; margin: 0; font-weight:900; line-height:1; vertical-align:middle; text-transform:uppercase;
+  font-size: clamp(28px, 6vw, 64px);
+  padding: 6px 12px; border-radius: 10px;
+  background: rgba(0,0,0,0.28);
+  color: #fff;
+  -webkit-text-stroke: 0.8px rgba(0,0,0,0.6);
+  text-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+.word-principal.space { display:inline-block; width:0.42em; }
+@keyframes principalShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+/* Add small outline for red/yellow (player color) */
+.win-red { text-shadow: 0 6px 20px rgba(200,80,0,0.6); }
+.win-yellow { text-shadow: 0 6px 20px rgba(200,180,0,0.6); }
+
+/* letter decoration styles for banner */
+.word-sport, .word-dragon { display:inline-block; margin: 0; font-weight:900; line-height:1; vertical-align:middle; text-transform:uppercase; }
+.word-sport {
+  font-size: clamp(28px, 6vw, 64px);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.28);
+  color: #fff;
+  -webkit-text-stroke: 0.8px rgba(0,0,0,0.6);
+  text-shadow: 0 8px 20px rgba(0,0,0,0.7);
+}
+.letter-sport {
+  display: inline-block;
+  font-size: clamp(28px, 6vw, 64px);
+  line-height: 1;
+  padding: 0 2px;
+  vertical-align: middle;
+  color: transparent; /* reveal background via background-clip */
+  -webkit-background-clip: text;
+  background-clip: text;
+  background-repeat: repeat;
+  background-size: 28px 28px;
+  -webkit-text-stroke: 0.9px rgba(0,0,0,0.45);
+  text-shadow: 0 6px 18px rgba(0,0,0,0.6);
+}
+.letter-sport.space { display:inline-block; width:0.42em; }
+.word-dragon {
+  font-size: clamp(34px, 6.5vw, 72px);
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.28);
+  color: #fff;
+  -webkit-text-stroke: 0.9px rgba(0,0,0,0.65);
+  text-shadow: 0 10px 26px rgba(0,0,0,0.75);
+}
+
+/* ensure spaces between words are small but visible */
+.word-sport.space, .word-dragon.space { display:inline-block; width:0.42em; }
+
+/* Banner action buttons */
+.banner-actions { margin-top: 18px; display:flex; gap:12px; justify-content:center; align-items:center; }
+.banner-btn { display:inline-block; padding: 10px 18px; border-radius: 10px; background: var(--accent); color: #000; text-decoration:none; font-weight:800; box-shadow: 0 8px 22px rgba(0,0,0,0.45); transition: transform 160ms ease, background 160ms ease; }
+.banner-btn:focus { outline: 3px solid rgba(255,255,255,0.12); transform: translateY(-3px); }
+.banner-btn:hover { transform: translateY(-3px); filter: brightness(0.95); }
+.banner-btn.alt { background: #ffffff; color: #000; border: none; box-shadow: 0 6px 18px rgba(0,0,0,0.2); }
+
+/* Improve readability: stronger stroke / shadow for word fills */
+.word-sport, .word-dragon, .word-principal {
+  -webkit-text-stroke: 1.2px rgba(0,0,0,0.35);
+  text-shadow: 0 4px 18px rgba(0,0,0,0.6), 0 1px 1px rgba(255,255,255,0.02);
+}
+
+/* Slightly larger title on small screens for clarity */
+@media (max-width: 720px) {
+  #winner-banner { font-size: 26px; padding: 18px 22px; }
+  .word-sport, .word-dragon, .word-principal { font-size: clamp(18px, 6vw, 40px); }
+  .banner-actions { flex-direction: column; gap:8px; }
+}
+@keyframes fall-and-spin {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.95; }
+  80% { opacity: 0.95; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
+
+/* helper to keep number of balls reasonable on small screens */
+@media (max-width: 480px) {
+  .falling-ball { opacity: 0.9; }
+}
