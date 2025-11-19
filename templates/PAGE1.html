@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Puissance 4 — Partie</title>
+    <link rel="stylesheet" href="/assets/static/style/Style.css">
+  </head>
+  <body>
+    <video autoplay muted loop id="fondquibrille">
+      <source src="/assets/video/Arriéreplan.mp4.mp4" type="video/mp4">
+    </video>
+
+    <div class="overlay"></div>
+
+    <header class="site-header">
+      <nav class="nav">
+        <!-- Brand removed per user request -->
+        <div class="nav-actions">
+          <a href="/" class="button-class">Accueil</a>
+          <a href="/restart" class="button-class" style="margin-left:12px;">Rejouer</a>
+          <button id="mode-toggle" class="mode-toggle" aria-label="Basculer mode jour nuit" style="margin-left:12px">☀️/🌙</button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="game-container">
+      <!-- 3D layered title -->
+      <div class="title-3d" aria-hidden="true">
+        <span class="layer layer-3">Puissance 4</span>
+        <span class="layer layer-2">Puissance 4</span>
+        <span class="layer layer-1">Puissance 4</span>
+      </div>
+      <h1 class="sr-only">Puissance 4</h1>
+
+      {{/* Support two data shapes: either a wrapper {Game: *game.Game} or *game.Game directly. */}}
+      {{if .Game}}
+        {{with .Game.PlayerNames}}
+        <div class="players-info" style="margin-top:12px;">
+          <div class="player player-1"><span class="label">Vous</span> <span class="name">{{index . 0}}</span></div>
+          <div class="vs">—</div>
+          <div class="player player-2"><span class="label">Adversaire</span> <span class="name">{{index . 1}}</span></div>
+        </div>
+        {{end}}
+        <!-- expose chosen balls for the front-end (may be empty if none chosen) -->
+        <div id="game-data" style="display:none;"
+             data-ball1="{{index .Game.PlayerBalls 0}}"
+             data-ball2="{{index .Game.PlayerBalls 1}}"></div>
+      {{else}}
+        {{with .PlayerNames}}
+        <div class="players-info" style="margin-top:12px;">
+          <div class="player player-1"><span class="label">Vous</span> <span class="name">{{index . 0}}</span></div>
+          <div class="vs">—</div>
+          <div class="player player-2"><span class="label">Adversaire</span> <span class="name">{{index . 1}}</span></div>
+        </div>
+        {{end}}
+        <div id="game-data" style="display:none;"
+             data-ball1="{{index .PlayerBalls 0}}"
+             data-ball2="{{index .PlayerBalls 1}}"></div>
+      {{end}}
+      <div id="game-board"></div>
+      <div id="winner"></div>
+    </main>
+
+    <div id="replay-button" style="display: none; position: fixed; bottom: 28px; right: 28px; z-index: 2;">
+      <a href="/restart" class="button-class">Rejouer</a>
+    </div>
+
+    <script>
+    const rows = 6;
+    const cols = 7;
+    let currentPlayer = 'red';
+    const board = [];
+    const gameBoard = document.getElementById('game-board');
+    const winnerText = document.getElementById('winner');
+
+    // read chosen token styles (from server-side data attributes)
+    const dataEl = document.getElementById('game-data');
+    const chosen1 = dataEl && dataEl.dataset.ball1 ? dataEl.dataset.ball1 : 'star';
+    const chosen2 = dataEl && dataEl.dataset.ball2 ? dataEl.dataset.ball2 : 'galaxy';
+    const tokenFor = { 'red': 'token-' + chosen1, 'yellow': 'token-' + chosen2 };
+
+    for (let r = 0; r < rows; r++) {
+      board[r] = [];
+      for (let c = 0; c < cols; c++) {
+        board[r][c] = null;
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.addEventListener('click', handleClick);
+        gameBoard.appendChild(cell);
+      }
+    }
+
+    function handleClick(e) {
+      const col = parseInt(e.target.dataset.col);
+      for (let r = rows - 1; r >= 0; r--) {
+        if (!board[r][col]) {
+          board[r][col] = currentPlayer;
+          const cell = document.querySelector(`.cell[data-row='${r}'][data-col='${col}']`);
+          // keep color classes for legacy styling but also apply chosen token skin
+          cell.classList.add(currentPlayer);
+          const skin = tokenFor[currentPlayer];
+          if (skin) cell.classList.add(skin);
+          const winning = findWinningCells(r, col, currentPlayer);
+          if (winning) {
+            // blur the winning cells and orchestrate a clean winner transition
+            markWinningCells(winning);
+            const nameMap = { 'red': document.querySelector('.player.player-1 .name')?.textContent || 'Joueur 1', 'yellow': document.querySelector('.player.player-2 .name')?.textContent || 'Joueur 2' };
+            // disable further clicks immediately
+            document.querySelectorAll('.cell').forEach(c => c.removeEventListener('click', handleClick));
+            document.getElementById('replay-button').style.display = 'block';
+            // add a lightweight 'game-over' state so CSS can dim the board
+            document.body.classList.add('game-over');
+            // wait for the orbs / cell animation to play a bit, then reveal the banner
+            setTimeout(() => showWinnerBanner(nameMap[currentPlayer], currentPlayer), 420);
+          }
+          currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+          break;
+        }
+      }
+    }
+
+    // Find winning line (returns array of {r,c} coords) or null
+    function findWinningCells(row, col, player) {
+      const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+      for (let [dr, dc] of directions) {
+        const line = [{r: row, c: col}];
+        // forward
+        let r = row + dr, c = col + dc;
+        while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) {
+          line.push({r,c}); r += dr; c += dc;
+        }
+        // backward
+        r = row - dr; c = col - dc;
+        while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) {
+          line.unshift({r,c}); r -= dr; c -= dc;
+        }
+        if (line.length >= 4) return line.slice(0,4); // return first 4 in line (could be longer)
+      }
+      return null;
+    }
+
+    function markWinningCells(cells){
+      cells.forEach(({r,c}, idx)=>{
+        const el = document.querySelector(`.cell[data-row='${r}'][data-col='${c}']`);
+        if(!el) return;
+        // add epic class which animates blur / glow
+        el.classList.add('winner-epic');
+        // add a glowing orb inside the cell that matches the current theme/token
+        const orb = document.createElement('div');
+        orb.className = 'winning-orb';
+        // small delay to stagger the orbs
+        orb.style.animationDelay = (idx * 80) + 'ms';
+        el.appendChild(orb);
+      });
+    }
+
+    // show a centered themed banner with the winner name
+    function showWinnerBanner(name, playerColor){
+      // We intentionally DO NOT dim the entire page; only the game cells will be blurred via CSS.
+      // This keeps the rest of the UI fully visible and places the banner above the board.
+
+    // remove existing banner/text/actions and create fresh ones
+    let oldBanner = document.getElementById('winner-banner'); if(oldBanner) oldBanner.remove();
+    let oldText = document.getElementById('winner-text'); if(oldText) oldText.remove();
+    let oldActions = document.getElementById('winner-actions-container'); if(oldActions) oldActions.remove();
+
+    // create the banner container (used as a clipped/position anchor but will be transparent to show only text)
+    const banner = document.createElement('div');
+    banner.id = 'winner-banner';
+    banner.setAttribute('role','status');
+    banner.setAttribute('aria-live','polite');
+    banner.style.pointerEvents = 'none'; // we won't capture clicks on the frame
+    document.body.appendChild(banner);
+
+    // create the winner text element (no surrounding framed box per request)
+    const winnerText = document.createElement('div');
+    winnerText.id = 'winner-text';
+    winnerText.className = playerColor === 'red' ? 'win-red' : 'win-yellow';
+    winnerText.textContent = name + ' THE GOAT';
+    // apply themed letter decorations into the winnerText element
+    applyThemedLetters(winnerText, tokenFor[playerColor]);
+    // append text inside banner's visual area (banner remains transparent)
+    banner.appendChild(winnerText);
+    // animate the banner container and text in
+    requestAnimationFrame(()=> banner.classList.add('visible'));
+
+    // create a separate actions container placed lower on the page (far from the banner)
+    const actionsContainer = document.createElement('div');
+    actionsContainer.id = 'winner-actions-container';
+    actionsContainer.className = 'banner-actions-container';
+    // make it keyboard-focusable
+    actionsContainer.tabIndex = -1;
+    const replayLink = document.createElement('a');
+    replayLink.className = 'banner-btn';
+    replayLink.href = '/restart';
+    replayLink.textContent = 'Rejouer une partie';
+    const homeLink = document.createElement('a');
+    homeLink.className = 'banner-btn alt';
+    homeLink.href = '/';
+    homeLink.textContent = 'Accueil';
+    actionsContainer.appendChild(replayLink);
+    actionsContainer.appendChild(homeLink);
+    document.body.appendChild(actionsContainer);
+
+    // focus the replay button for accessibility
+    setTimeout(()=> replayLink.focus(), 320);
+    }
+
+    // replace banner text by decorated letters according to current theme
+    // now accepts optional second argument tokenClass (e.g. 'token-star') so sport letters can use the winning token image
+    function applyThemedLetters(banner, tokenClass){
+      const theme = (document.body.className.match(/theme-([a-z]+)/) || [])[1] || 'principal';
+      const text = banner.textContent || '';
+      // clear
+      banner.innerHTML = '';
+      // map token class -> sport image (mirrors CSS mapping)
+      const SPORT_IMAGE_MAP = {
+        'token-star': '/assets/static/img/BASKETT.png',
+        'token-galaxy': '/assets/static/img/RUGBY.png',
+        'token-neon': '/assets/static/img/FOOTBALL.png',
+        'token-ajout1': '/assets/static/img/TENNIS.png',
+        'token-ajout2': '/assets/static/img/VOLLEY.png'
+      };
+      if(theme === 'sport'){
+        // per-letter rendering for sport: fill each letter with a (possibly different) ball image
+        const SPORT_IMAGES = [
+          '/assets/static/img/BASKETT.png',
+          '/assets/static/img/FOOTBALL.png',
+          '/assets/static/img/RUGBY.png',
+          '/assets/static/img/TENNIS.png',
+          '/assets/static/img/VOLLEY.png'
+        ];
+        let idx = 0;
+        for(let ch of text){
+          if(ch === ' '){
+            const spc = document.createElement('span'); spc.className = 'letter-sport space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc);
+          } else {
+            const letter = document.createElement('span');
+            letter.className = 'letter-sport';
+            letter.textContent = ch;
+            // pick an image rotating through the available sport images so letters show different ball types
+            const img = SPORT_IMAGES[idx % SPORT_IMAGES.length];
+            letter.style.backgroundImage = `url('${img}')`;
+            // vary offsets for an organic look
+            letter.style.backgroundPosition = `${(idx*18)%160}px ${(idx*11)%130}px`;
+            // slightly larger background so balls read well inside bigger letters
+            letter.style.backgroundSize = '36px 36px';
+            banner.appendChild(letter);
+          }
+          idx++;
+        }
+  } else if(theme === 'dragon' || theme === 'pokemon'){
+        // word-level rendering for dragon theme as well
+        const wordsD = text.split(' ');
+        let j = 0;
+        wordsD.forEach((w, wi)=>{
+          if(w === ''){ const spc = document.createElement('span'); spc.className = 'word-dragon space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc); return; }
+          const span = document.createElement('span'); span.className = 'word-dragon'; span.textContent = w;
+          span.style.backgroundPosition = `${(j*29)%200}px ${(j*19)%160}px`;
+          span.style.backgroundSize = '72px 72px';
+          banner.appendChild(span);
+          if(wi < wordsD.length - 1){ const sp = document.createElement('span'); sp.className = 'word-dragon space'; sp.innerHTML = '&nbsp;'; banner.appendChild(sp); }
+          j++;
+        });
+  } else {
+        // principal: render by word so letters stay together visually
+        const wordsP = text.split(' ');
+        let k = 0;
+        wordsP.forEach((w, wi)=>{
+          if(w === ''){ const spc = document.createElement('span'); spc.className = 'word-principal space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc); return; }
+          const span = document.createElement('span'); span.className = 'word-principal'; span.textContent = w;
+          span.style.backgroundPosition = `${(k*41)%240}px ${(k*31)%160}px`;
+          span.style.backgroundSize = '200% 200%';
+          banner.appendChild(span);
+          if(wi < wordsP.length - 1){ const sp = document.createElement('span'); sp.className = 'word-principal space'; sp.innerHTML = '&nbsp;'; banner.appendChild(sp); }
+          k++;
+        });
+      }
+    }
+  </script>
+    <script>
+      // Mode jour / nuit : partage le même comportement que l'accueil
+      (function(){
+        const body = document.body;
+        const toggle = document.getElementById('mode-toggle');
+        if(!toggle) return;
+        const saved = localStorage.getItem('pf4-mode') || 'night';
+        function applyMode(mode){
+          if(mode === 'day'){
+            body.classList.remove('night-mode');
+            body.classList.add('day-mode');
+          } else {
+            body.classList.remove('day-mode');
+            body.classList.add('night-mode');
+          }
+        }
+        applyMode(saved);
+        toggle.addEventListener('click', function(){
+          const current = body.classList.contains('day-mode') ? 'day' : 'night';
+          const next = current === 'day' ? 'night' : 'day';
+          localStorage.setItem('pf4-mode', next);
+          applyMode(next);
+        });
+        // apply persisted theme (site-wide) and swap background if needed
+        const savedTheme = localStorage.getItem('pf4-theme');
+        function applyThemeToPage(theme){
+          if(!theme) return;
+          document.body.classList.remove('theme-principal','theme-sport','theme-dragon','theme-pokemon','theme-ynov');
+          document.body.classList.add('theme-' + theme);
+          const vid = document.getElementById('fondquibrille');
+          if (vid && vid.tagName && vid.querySelector) {
+            const source = vid.querySelector('source');
+            let candidate;
+            if (theme === 'principal') candidate = '/assets/video/Arriéreplan.mp4.mp4';
+            else if (theme === 'dragon' || theme === 'pokemon') candidate = '/assets/video/pokemon.mp4';
+            else if (theme === 'sport') candidate = '/assets/video/FOOTBALL.MP4.mp4';
+            else candidate = '/assets/video/' + theme + '-background.mp4';
+            if (source) { source.src = candidate; vid.load(); }
+          }
+        }
+        if (savedTheme) applyThemeToPage(savedTheme);
+      })();
+    </script>
+    <script>
+      (function(){
+        const rand = (min,max)=> Math.random()*(max-min)+min;
+        function createBall(){
+          // reduce spawn rate on small screens
+          if (window.innerWidth < 480 && Math.random() > 0.4) return;
+          const ball = document.createElement('div');
+          ball.className = 'falling-ball ' + (Math.random()>0.5? 'red':'orange');
+          const size = Math.round(rand(12,44));
+          ball.style.width = size + 'px';
+          ball.style.height = size + 'px';
+          ball.style.left = Math.round(rand(0, window.innerWidth - size)) + 'px';
+          const duration = Math.round(rand(4200, 11000));
+          ball.style.animationDuration = duration + 'ms';
+          document.body.appendChild(ball);
+          setTimeout(()=> ball.remove(), duration + 800);
+        }
+        for(let i=0;i<14;i++){ setTimeout(createBall, i*90); }
+        setInterval(()=>{ createBall(); }, 700);
+      })();
+    </script>
+</body>
+</html>

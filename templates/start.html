@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Commencer - Puissance 4</title>
+    <link rel="stylesheet" href="/assets/static/style/Style.css">
+  </head>
+  <body>
+    <video autoplay muted loop id="fondquibrille">
+      <source src="/assets/video/Arriéreplan.mp4.mp4" type="video/mp4">
+    </video>
+    <div class="overlay"></div>
+    <header class="site-header">
+      <nav class="nav">
+        <div class="brand"><a href="/" class="brand-link">Puissance 4</a></div>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <div class="hero-content" style="max-width:720px;">
+        <h1>Créer une partie</h1>
+        <p class="tagline">Choisis le mode de jeu puis saisis les pseudos si nécessaire.</p>
+
+        <form action="/choose" method="get" id="start-form">
+          <div style="margin:18px 0;">
+            <label>
+              <input type="radio" name="mode" value="two" checked>
+              Deux joueurs (local)
+            </label>
+            <label style="margin-left:18px;">
+              <input type="radio" name="mode" value="solo">
+              Contre le bot (IA)
+            </label>
+          </div>
+
+          <div id="names" style="display:block;">
+            <div style="margin:8px 0;"><input name="name1" placeholder="Nom joueur 1" class="input-name"/></div>
+            <div style="margin:8px 0;"><input name="name2" placeholder="Nom joueur 2" class="input-name"/></div>
+          </div>
+
+          <div id="difficulty-wrap" style="margin-top:12px; display:none;">
+            <label for="difficulty-select" style="margin-right:8px;color:rgba(255,255,255,0.9);">Niveau IA :</label>
+            <select id="difficulty-select" name="difficulty" class="button-class" style="padding:6px 10px;border-radius:6px;">
+              <option value="debutant">Débutant</option>
+              <option value="amateur" selected>Amateur</option>
+              <option value="expert">Expert</option>
+            </select>
+          </div>
+
+          <div style="margin-top:18px;">
+            <button type="submit" class="start-button">Suivant — Choix des ballons</button>
+            <a href="/" class="button-class" style="margin-left:12px;">Annuler</a>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <script>
+      // bascule l'affichage des champs de nom selon le mode
+        (function(){
+        const form = document.getElementById('start-form');
+        const radios = form.elements['mode'];
+        const names = document.getElementById('names');
+        const diffWrap = document.getElementById('difficulty-wrap');
+        function update(){
+          const mode = form.mode.value;
+          if(mode === 'solo'){
+            // solo : masquer le 2e champ (bot) et remplacer le label placeholder
+            names.style.display = 'block';
+            form.name2.placeholder = 'Nom du bot (optionnel)';
+            form.name1.placeholder = 'Ton nom (optionnel)';
+            if(diffWrap) diffWrap.style.display = 'block';
+          } else {
+            names.style.display = 'block';
+            form.name1.placeholder = 'Nom joueur 1';
+            form.name2.placeholder = 'Nom joueur 2';
+            if(diffWrap) diffWrap.style.display = 'none';
+          }
+        }
+        Array.from(radios).forEach(r => r.addEventListener('change', update));
+        update();
+      })();
+    </script>
+    <script>
+      (function(){
+        const rand = (min,max)=> Math.random()*(max-min)+min;
+        // apply persisted theme and swap background if present
+        const savedTheme = localStorage.getItem('pf4-theme');
+        function applyThemeToPage(theme){
+          if(!theme) return;
+          document.body.classList.add('theme-' + theme);
+          const vid = document.getElementById('fondquibrille');
+          if (vid && vid.querySelector) {
+            const source = vid.querySelector('source');
+            let candidate;
+            if (theme === 'principal') candidate = '/assets/video/Arriéreplan.mp4.mp4';
+            else if (theme === 'dragon') candidate = '/assets/video/DRAGONBALL.mp4';
+            else if (theme === 'sport') candidate = '/assets/video/FOOTBALL.MP4.mp4';
+            else candidate = '/assets/video/' + theme + '-background.mp4';
+            if (source) { source.src = candidate; vid.load(); }
+          }
+        }
+        if (savedTheme) applyThemeToPage(savedTheme);
+        function createBall(){
+          if (window.innerWidth < 480 && Math.random() > 0.45) return;
+          const ball = document.createElement('div');
+          ball.className = 'falling-ball ' + (Math.random()>0.5? 'red':'orange');
+          const size = Math.round(rand(12,44));
+          ball.style.width = size + 'px';
+          ball.style.height = size + 'px';
+          ball.style.left = Math.round(rand(0, window.innerWidth - size)) + 'px';
+          const duration = Math.round(rand(4200, 11000));
+          ball.style.animationDuration = duration + 'ms';
+          document.body.appendChild(ball);
+          setTimeout(()=> ball.remove(), duration + 800);
+        }
+        for(let i=0;i<12;i++){ setTimeout(createBall, i*80); }
+        setInterval(()=>{ createBall(); }, 720);
+      })();
+    </script>
+  </body>
+</html>
