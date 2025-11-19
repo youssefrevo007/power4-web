@@ -8,11 +8,14 @@
     <style>
       /* small additions scoped to this page */
       .auth-wrap{max-width:520px;margin:48px auto;background:rgba(0,0,0,0.35);padding:24px;border-radius:12px}
-      .tabs{display:flex;gap:8px;margin-bottom:12px}
-      .tab{flex:1;padding:8px 12px;text-align:center;cursor:pointer;border-radius:8px;background:rgba(255,255,255,0.06)}
-      .tab.active{background:rgba(255,255,255,0.12);font-weight:600}
+      .auth-actions{display:flex;gap:12px;margin-bottom:14px;justify-content:center}
+      .tab-button{flex:1;padding:12px 14px;border-radius:10px;cursor:pointer;background:rgba(255,255,255,0.06);color:#fff;border:none;font-weight:700}
+      .tab-button.active{background:var(--accent, #ffcc00);color:#000;box-shadow:0 6px 18px rgba(0,0,0,0.45)}
+      .tabs{display:none} /* keep legacy tabs hidden, use primary buttons */
       .input-row{margin:8px 0}
       .small-note{font-size:0.9rem;color:rgba(255,255,255,0.8);margin-top:6px}
+      /* ensure auth card sits above decorative falling balls */
+      .auth-wrap{position:relative;z-index:6}
     </style>
   </head>
   <body>
@@ -29,7 +32,11 @@
     <main class="hero">
       <div class="hero-content">
         <div class="auth-wrap">
-          <div class="tabs">
+          <div class="auth-actions">
+            <button id="btn-show-login" class="tab-button active">Se connecter</button>
+            <button id="btn-show-register" class="tab-button">S'inscrire</button>
+          </div>
+          <div class="tabs" aria-hidden="true">
             <div id="tab-login" class="tab active">Se connecter</div>
             <div id="tab-register" class="tab">Créer un compte</div>
           </div>
@@ -69,7 +76,7 @@
         function showReg(){ tabLogin.classList.remove('active'); tabReg.classList.add('active'); loginView.style.display='none'; regView.style.display='block'; }
         tabLogin.addEventListener('click', showLogin); tabReg.addEventListener('click', showReg);
 
-        // simple localStorage-backed accounts (demo only)
+  // simple localStorage-backed accounts (demo only)
         function loadAccounts(){ try{ return JSON.parse(localStorage.getItem('pf4-accounts')||'{}'); }catch(e){return{}} }
         function saveAccounts(ac){ localStorage.setItem('pf4-accounts', JSON.stringify(ac)); }
 
@@ -119,9 +126,21 @@
           }
         }catch(e){}
 
-        // apply saved theme for consistency
-        const savedTheme = localStorage.getItem('pf4-theme');
+        // apply saved theme for consistency and swap background video if available
+        const savedTheme = localStorage.getItem('pf4-theme') || 'principal';
         if(savedTheme) document.body.classList.add('theme-' + savedTheme);
+        (function applyAuthBackground(theme){
+          const vid = document.getElementById('fondquibrille');
+          if(!vid) return;
+          const source = vid.querySelector('source');
+          let candidate = '/assets/video/Arriéreplan.mp4.mp4';
+          if(theme === 'principal') candidate = '/assets/video/Arriéreplan.mp4.mp4';
+          else if(theme === 'dragon' || theme === 'pokemon') candidate = '/assets/video/DRAGONBALL.mp4';
+          else if(theme === 'sport') candidate = '/assets/video/FOOTBALL.MP4.mp4';
+          else if(theme === 'pokemon') candidate = '/assets/video/POKEMON.mp4';
+          else candidate = '/assets/video/Arriéreplan.mp4.mp4';
+          if(source){ source.src = candidate; vid.load(); }
+        })(savedTheme);
       })();
     </script>
   </body>
