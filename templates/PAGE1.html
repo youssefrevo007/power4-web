@@ -46,6 +46,7 @@
         <div id="game-data" style="display:none;"
              data-ball1="{{index .Game.PlayerBalls 0}}"
              data-ball2="{{index .Game.PlayerBalls 1}}"></div>
+  <div id="game-state" style="display:none;" data-current="{{.Game.CurrentPlayer}}" data-winner="{{.Game.Winner}}"></div>
       {{else}}
         {{with .PlayerNames}}
         <div class="players-info" style="margin-top:12px;">
@@ -58,7 +59,16 @@
              data-ball1="{{index .PlayerBalls 0}}"
              data-ball2="{{index .PlayerBalls 1}}"></div>
       {{end}}
-      <div id="game-board"></div>
+      <div id="game-board">
+        {{/* Server-rendered board state: output empty grid cells with data-state so client can visualise and send moves to server. */}}
+        {{if .Game}}
+          {{range $r, $row := .Game.Board}}
+            {{range $c, $val := $row}}
+              <div class="cell" data-row="{{$r}}" data-col="{{$c}}" data-state="{{$val}}"></div>
+            {{end}}
+          {{end}}
+        {{end}}
+      </div>
       <div id="winner"></div>
     </main>
 
@@ -67,219 +77,120 @@
     </div>
 
     <script>
-    const rows = 6;
-    const cols = 7;
-    let currentPlayer = 'red';
-    const board = [];
-    const gameBoard = document.getElementById('game-board');
-    const winnerText = document.getElementById('winner');
+    (function(){
+      const rows = 6;
+      const cols = 7;
+      let currentPlayer = 'red';
+      const board = new Array(rows);
+      for(let r=0;r<rows;r++){ board[r] = new Array(cols).fill(null); }
+      const gameBoard = document.getElementById('game-board');
+      const winnerText = document.getElementById('winner');
 
-    // read chosen token styles (from server-side data attributes)
-    const dataEl = document.getElementById('game-data');
-    const chosen1 = dataEl && dataEl.dataset.ball1 ? dataEl.dataset.ball1 : 'star';
-    const chosen2 = dataEl && dataEl.dataset.ball2 ? dataEl.dataset.ball2 : 'galaxy';
-    const tokenFor = { 'red': 'token-' + chosen1, 'yellow': 'token-' + chosen2 };
+      // read chosen token styles (from server-side data attributes)
+      const dataEl = document.getElementById('game-data');
+      const chosen1 = dataEl && dataEl.dataset.ball1 ? dataEl.dataset.ball1 : 'star';
+      const chosen2 = dataEl && dataEl.dataset.ball2 ? dataEl.dataset.ball2 : 'galaxy';
+      const tokenFor = { 'red': 'token-' + chosen1, 'yellow': 'token-' + chosen2 };
 
-    for (let r = 0; r < rows; r++) {
-      board[r] = [];
-      for (let c = 0; c < cols; c++) {
-        board[r][c] = null;
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.dataset.row = r;
-        cell.dataset.col = c;
-        cell.addEventListener('click', handleClick);
-        gameBoard.appendChild(cell);
-      }
-    }
-
-    function handleClick(e) {
-      const col = parseInt(e.target.dataset.col);
-      for (let r = rows - 1; r >= 0; r--) {
-        if (!board[r][col]) {
-          board[r][col] = currentPlayer;
-          const cell = document.querySelector(`.cell[data-row='${r}'][data-col='${col}']`);
-          // keep color classes for legacy styling but also apply chosen token skin
-          cell.classList.add(currentPlayer);
-          const skin = tokenFor[currentPlayer];
-          if (skin) cell.classList.add(skin);
-          const winning = findWinningCells(r, col, currentPlayer);
-          if (winning) {
-            // blur the winning cells and orchestrate a clean winner transition
-            markWinningCells(winning);
-            const nameMap = { 'red': document.querySelector('.player.player-1 .name')?.textContent || 'Joueur 1', 'yellow': document.querySelector('.player.player-2 .name')?.textContent || 'Joueur 2' };
-            // disable further clicks immediately
-            document.querySelectorAll('.cell').forEach(c => c.removeEventListener('click', handleClick));
-            document.getElementById('replay-button').style.display = 'block';
-            // add a lightweight 'game-over' state so CSS can dim the board
-            document.body.classList.add('game-over');
-            // wait for the orbs / cell animation to play a bit, then reveal the banner
-            setTimeout(() => showWinnerBanner(nameMap[currentPlayer], currentPlayer), 420);
+      // If server already rendered the grid, reuse it; otherwise create cells.
+      let cells = Array.from(document.querySelectorAll('.cell'));
+      if(cells.length === 0){
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.row = r;
+            cell.dataset.col = c;
+            gameBoard.appendChild(cell);
           }
-          currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
-          break;
         }
-      }
-    }
-
-    // Find winning line (returns array of {r,c} coords) or null
-    function findWinningCells(row, col, player) {
-      const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
-      for (let [dr, dc] of directions) {
-        const line = [{r: row, c: col}];
-        // forward
-        let r = row + dr, c = col + dc;
-        while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) {
-          line.push({r,c}); r += dr; c += dc;
-        }
-        // backward
-        r = row - dr; c = col - dc;
-        while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) {
-          line.unshift({r,c}); r -= dr; c -= dc;
-        }
-        if (line.length >= 4) return line.slice(0,4); // return first 4 in line (could be longer)
-      }
-      return null;
-    }
-
-    function markWinningCells(cells){
-      cells.forEach(({r,c}, idx)=>{
-        const el = document.querySelector(`.cell[data-row='${r}'][data-col='${c}']`);
-        if(!el) return;
-        // add epic class which animates blur / glow
-        el.classList.add('winner-epic');
-        // add a glowing orb inside the cell that matches the current theme/token
-        const orb = document.createElement('div');
-        orb.className = 'winning-orb';
-        // small delay to stagger the orbs
-        orb.style.animationDelay = (idx * 80) + 'ms';
-        el.appendChild(orb);
-      });
-    }
-
-    // show a centered themed banner with the winner name
-    function showWinnerBanner(name, playerColor){
-      // We intentionally DO NOT dim the entire page; only the game cells will be blurred via CSS.
-      // This keeps the rest of the UI fully visible and places the banner above the board.
-
-    // remove existing banner/text/actions and create fresh ones
-    let oldBanner = document.getElementById('winner-banner'); if(oldBanner) oldBanner.remove();
-    let oldText = document.getElementById('winner-text'); if(oldText) oldText.remove();
-    let oldActions = document.getElementById('winner-actions-container'); if(oldActions) oldActions.remove();
-
-    // create the banner container (used as a clipped/position anchor but will be transparent to show only text)
-    const banner = document.createElement('div');
-    banner.id = 'winner-banner';
-    banner.setAttribute('role','status');
-    banner.setAttribute('aria-live','polite');
-    banner.style.pointerEvents = 'none'; // we won't capture clicks on the frame
-    document.body.appendChild(banner);
-
-    // create the winner text element (no surrounding framed box per request)
-    const winnerText = document.createElement('div');
-    winnerText.id = 'winner-text';
-    winnerText.className = playerColor === 'red' ? 'win-red' : 'win-yellow';
-    winnerText.textContent = name + ' THE GOAT';
-    // apply themed letter decorations into the winnerText element
-    applyThemedLetters(winnerText, tokenFor[playerColor]);
-    // append text inside banner's visual area (banner remains transparent)
-    banner.appendChild(winnerText);
-    // animate the banner container and text in
-    requestAnimationFrame(()=> banner.classList.add('visible'));
-
-    // create a separate actions container placed lower on the page (far from the banner)
-    const actionsContainer = document.createElement('div');
-    actionsContainer.id = 'winner-actions-container';
-    actionsContainer.className = 'banner-actions-container';
-    // make it keyboard-focusable
-    actionsContainer.tabIndex = -1;
-    const replayLink = document.createElement('a');
-    replayLink.className = 'banner-btn';
-    replayLink.href = '/restart';
-    replayLink.textContent = 'Rejouer une partie';
-    const homeLink = document.createElement('a');
-    homeLink.className = 'banner-btn alt';
-    homeLink.href = '/';
-    homeLink.textContent = 'Accueil';
-    actionsContainer.appendChild(replayLink);
-    actionsContainer.appendChild(homeLink);
-    document.body.appendChild(actionsContainer);
-
-    // focus the replay button for accessibility
-    setTimeout(()=> replayLink.focus(), 320);
-    }
-
-    // replace banner text by decorated letters according to current theme
-    // now accepts optional second argument tokenClass (e.g. 'token-star') so sport letters can use the winning token image
-    function applyThemedLetters(banner, tokenClass){
-      const theme = (document.body.className.match(/theme-([a-z]+)/) || [])[1] || 'principal';
-      const text = banner.textContent || '';
-      // clear
-      banner.innerHTML = '';
-      // map token class -> sport image (mirrors CSS mapping)
-      const SPORT_IMAGE_MAP = {
-        'token-star': '/assets/static/img/BASKETT.png',
-        'token-galaxy': '/assets/static/img/RUGBY.png',
-        'token-neon': '/assets/static/img/FOOTBALL.png',
-        'token-ajout1': '/assets/static/img/TENNIS.png',
-        'token-ajout2': '/assets/static/img/VOLLEY.png'
-      };
-      if(theme === 'sport'){
-        // per-letter rendering for sport: fill each letter with a (possibly different) ball image
-        const SPORT_IMAGES = [
-          '/assets/static/img/BASKETT.png',
-          '/assets/static/img/FOOTBALL.png',
-          '/assets/static/img/RUGBY.png',
-          '/assets/static/img/TENNIS.png',
-          '/assets/static/img/VOLLEY.png'
-        ];
-        let idx = 0;
-        for(let ch of text){
-          if(ch === ' '){
-            const spc = document.createElement('span'); spc.className = 'letter-sport space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc);
-          } else {
-            const letter = document.createElement('span');
-            letter.className = 'letter-sport';
-            letter.textContent = ch;
-            // pick an image rotating through the available sport images so letters show different ball types
-            const img = SPORT_IMAGES[idx % SPORT_IMAGES.length];
-            letter.style.backgroundImage = `url('${img}')`;
-            // vary offsets for an organic look
-            letter.style.backgroundPosition = `${(idx*18)%160}px ${(idx*11)%130}px`;
-            // slightly larger background so balls read well inside bigger letters
-            letter.style.backgroundSize = '36px 36px';
-            banner.appendChild(letter);
-          }
-          idx++;
-        }
-  } else if(theme === 'dragon' || theme === 'pokemon'){
-        // word-level rendering for dragon theme as well
-        const wordsD = text.split(' ');
-        let j = 0;
-        wordsD.forEach((w, wi)=>{
-          if(w === ''){ const spc = document.createElement('span'); spc.className = 'word-dragon space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc); return; }
-          const span = document.createElement('span'); span.className = 'word-dragon'; span.textContent = w;
-          span.style.backgroundPosition = `${(j*29)%200}px ${(j*19)%160}px`;
-          span.style.backgroundSize = '72px 72px';
-          banner.appendChild(span);
-          if(wi < wordsD.length - 1){ const sp = document.createElement('span'); sp.className = 'word-dragon space'; sp.innerHTML = '&nbsp;'; banner.appendChild(sp); }
-          j++;
-        });
-  } else {
-        // principal: render by word so letters stay together visually
-        const wordsP = text.split(' ');
-        let k = 0;
-        wordsP.forEach((w, wi)=>{
-          if(w === ''){ const spc = document.createElement('span'); spc.className = 'word-principal space'; spc.innerHTML = '&nbsp;'; banner.appendChild(spc); return; }
-          const span = document.createElement('span'); span.className = 'word-principal'; span.textContent = w;
-          span.style.backgroundPosition = `${(k*41)%240}px ${(k*31)%160}px`;
-          span.style.backgroundSize = '200% 200%';
-          banner.appendChild(span);
-          if(wi < wordsP.length - 1){ const sp = document.createElement('span'); sp.className = 'word-principal space'; sp.innerHTML = '&nbsp;'; banner.appendChild(sp); }
-          k++;
+        cells = Array.from(document.querySelectorAll('.cell'));
+      } else {
+        // initialize board from server data-state attributes
+        cells.forEach(cell => {
+          const r = parseInt(cell.dataset.row || '0');
+          const c = parseInt(cell.dataset.col || '0');
+          const val = parseInt(cell.dataset.state || '0');
+          if(val === 1){ board[r][c] = 'red'; cell.classList.add('red'); const skin = tokenFor['red']; if(skin) cell.classList.add(skin); }
+          else if(val === 2){ board[r][c] = 'yellow'; cell.classList.add('yellow'); const skin = tokenFor['yellow']; if(skin) cell.classList.add(skin); }
+          else { board[r][c] = null; }
         });
       }
-    }
+
+      // attach handlers once
+      cells.forEach(cell => cell.addEventListener('click', handleClick));
+
+      function handleClick(e) {
+        const col = parseInt(e.currentTarget.dataset.col);
+        for (let r = rows - 1; r >= 0; r--) {
+          if (!board[r][col]) {
+            board[r][col] = currentPlayer;
+            const cell = document.querySelector(`.cell[data-row='${r}'][data-col='${col}']`);
+            if(cell){
+              cell.classList.add(currentPlayer);
+              const skin = tokenFor[currentPlayer];
+              if (skin) cell.classList.add(skin);
+            }
+            const winning = findWinningCells(r, col, currentPlayer);
+            if (winning) {
+              markWinningCells(winning);
+              const nameMap = { 'red': document.querySelector('.player.player-1 .name')?.textContent || 'Joueur 1', 'yellow': document.querySelector('.player.player-2 .name')?.textContent || 'Joueur 2' };
+              document.querySelectorAll('.cell').forEach(c => c.removeEventListener('click', handleClick));
+              document.getElementById('replay-button').style.display = 'block';
+              document.body.classList.add('game-over');
+              setTimeout(() => showWinnerBanner(nameMap[currentPlayer], currentPlayer), 420);
+            }
+            currentPlayer = currentPlayer === 'red' ? 'yellow' : 'red';
+            break;
+          }
+        }
+      }
+
+      function findWinningCells(row, col, player) {
+        const directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+        for (let [dr, dc] of directions) {
+          const line = [{r: row, c: col}];
+          let r = row + dr, c = col + dc;
+          while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) { line.push({r,c}); r += dr; c += dc; }
+          r = row - dr; c = col - dc;
+          while (r >= 0 && r < rows && c >= 0 && c < cols && board[r][c] === player) { line.unshift({r,c}); r -= dr; c -= dc; }
+          if (line.length >= 4) return line.slice(0,4);
+        }
+        return null;
+      }
+
+      function markWinningCells(cells){
+        cells.forEach(({r,c}, idx)=>{
+          const el = document.querySelector(`.cell[data-row='${r}'][data-col='${c}']`);
+          if(!el) return;
+          el.classList.add('winner-epic');
+          const orb = document.createElement('div'); orb.className = 'winning-orb'; orb.style.animationDelay = (idx * 80) + 'ms'; el.appendChild(orb);
+        });
+      }
+
+      function showWinnerBanner(name, playerColor){
+        let oldBanner = document.getElementById('winner-banner'); if(oldBanner) oldBanner.remove();
+        let oldText = document.getElementById('winner-text'); if(oldText) oldText.remove();
+        let oldActions = document.getElementById('winner-actions-container'); if(oldActions) oldActions.remove();
+        const banner = document.createElement('div'); banner.id = 'winner-banner'; banner.setAttribute('role','status'); banner.setAttribute('aria-live','polite'); banner.style.pointerEvents = 'none'; document.body.appendChild(banner);
+        const winnerText = document.createElement('div'); winnerText.id = 'winner-text'; winnerText.className = playerColor === 'red' ? 'win-red' : 'win-yellow'; winnerText.textContent = name + ' THE GOAT'; applyThemedLetters(winnerText, tokenFor[playerColor]); banner.appendChild(winnerText); requestAnimationFrame(()=> banner.classList.add('visible'));
+        const actionsContainer = document.createElement('div'); actionsContainer.id = 'winner-actions-container'; actionsContainer.className = 'banner-actions-container'; actionsContainer.tabIndex = -1; const replayLink = document.createElement('a'); replayLink.className = 'banner-btn'; replayLink.href = '/restart'; replayLink.textContent = 'Rejouer une partie'; const homeLink = document.createElement('a'); homeLink.className = 'banner-btn alt'; homeLink.href = '/'; homeLink.textContent = 'Accueil'; actionsContainer.appendChild(replayLink); actionsContainer.appendChild(homeLink); document.body.appendChild(actionsContainer); setTimeout(()=> replayLink.focus(), 320);
+      }
+
+      function applyThemedLetters(banner, tokenClass){
+        const theme = (document.body.className.match(/theme-([a-z]+)/) || [])[1] || 'principal';
+        const text = banner.textContent || '';
+        banner.innerHTML = '';
+        const SPORT_IMAGE_MAP = {'token-star': '/assets/static/img/BASKETT.png','token-galaxy': '/assets/static/img/RUGBY.png','token-neon': '/assets/static/img/FOOTBALL.png','token-ajout1': '/assets/static/img/TENNIS.png','token-ajout2': '/assets/static/img/VOLLEY.png'};
+        if(theme === 'sport'){
+          const SPORT_IMAGES = ['/assets/static/img/BASKETT.png','/assets/static/img/FOOTBALL.png','/assets/static/img/RUGBY.png','/assets/static/img/TENNIS.png','/assets/static/img/VOLLEY.png']; let idx=0; for(let ch of text){ if(ch === ' '){ const spc=document.createElement('span'); spc.className='letter-sport space'; spc.innerHTML='&nbsp;'; banner.appendChild(spc); } else { const letter=document.createElement('span'); letter.className='letter-sport'; letter.textContent=ch; const img=SPORT_IMAGES[idx%SPORT_IMAGES.length]; letter.style.backgroundImage=`url('${img}')`; letter.style.backgroundPosition=`${(idx*18)%160}px ${(idx*11)%130}px`; letter.style.backgroundSize='36px 36px'; banner.appendChild(letter);} idx++; }
+        } else if(theme === 'dragon' || theme === 'pokemon'){
+          const wordsD = text.split(' '); let j=0; wordsD.forEach((w,wi)=>{ if(w===''){ const spc=document.createElement('span'); spc.className='word-dragon space'; spc.innerHTML='&nbsp;'; banner.appendChild(spc); return; } const span=document.createElement('span'); span.className='word-dragon'; span.textContent=w; span.style.backgroundPosition=`${(j*29)%200}px ${(j*19)%160}px`; span.style.backgroundSize='72px 72px'; banner.appendChild(span); if(wi<wordsD.length-1){ const sp=document.createElement('span'); sp.className='word-dragon space'; sp.innerHTML='&nbsp;'; banner.appendChild(sp); } j++; });
+        } else {
+          const wordsP = text.split(' '); let k=0; wordsP.forEach((w,wi)=>{ if(w===''){ const spc=document.createElement('span'); spc.className='word-principal space'; spc.innerHTML='&nbsp;'; banner.appendChild(spc); return; } const span=document.createElement('span'); span.className='word-principal'; span.textContent=w; span.style.backgroundPosition=`${(k*41)%240}px ${(k*31)%160}px`; span.style.backgroundSize='200% 200%'; banner.appendChild(span); if(wi<wordsP.length-1){ const sp=document.createElement('span'); sp.className='word-principal space'; sp.innerHTML='&nbsp;'; banner.appendChild(sp); } k++; });
+        }
+      }
+    })();
   </script>
     <script>
       // Mode jour / nuit : partage le même comportement que l'accueil

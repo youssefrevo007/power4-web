@@ -95,7 +95,7 @@
             const source = vid.querySelector('source');
             let candidate;
             if (theme === 'principal') candidate = '/assets/video/Arriéreplan.mp4.mp4';
-            else if (theme === 'dragon') candidate = '/assets/video/DRAGONBALL.mp4';
+            else if (theme === 'dragon' || theme === 'pokemon') candidate = '/assets/video/pokemon.mp4';
             else if (theme === 'sport') candidate = '/assets/video/FOOTBALL.MP4.mp4';
             else candidate = '/assets/video/' + theme + '-background.mp4';
             if (source) { source.src = candidate; vid.load(); }

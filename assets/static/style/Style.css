@@ -291,7 +291,8 @@ h1 {
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 3;
+  /* bring header above hero and decorative layers so nav buttons remain clickable */
+  z-index: 10;
   background: transparent;
 }
 .nav {
